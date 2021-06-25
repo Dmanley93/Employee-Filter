@@ -8,16 +8,17 @@ export default class EmployeeList extends Component {
     state = {
         title: "Hello World!",
         employees: [],
-        input: ''
+        input: '',
+        filteredEmployees: [],
+        order: "asc"
     }
     
     componentDidMount(){
-        this.setState({
-            title: "Employee Filter!"
-        })
         API.getUsers().then((res) => {
             this.setState({
-                employees: res.data.results
+                title: "Employee Filter!",
+                employees: res.data.results,
+                filteredEmployees: res.data.results
             })
             console.log(res)
         })
@@ -27,34 +28,39 @@ export default class EmployeeList extends Component {
         event.preventDefault();
         const value = event.target.value;
         const name = event.target.name;
+        let filterEmployee = this.state.employees
+        if (value.length > 0){
+            filterEmployee =  this.state.filteredEmployees.filter((event) => {
+                let filteredEmployee = event.name.first.toUpperCase();
+                return filteredEmployee.includes(value.toUpperCase());
+            })
+        }
+        
         this.setState({
-          [name]: value
-        });
-        const filterEmployee = this.state.employees.filter((event) => {
-            let filteredEmployee = event.name.first.toUpperCase();
-            return filteredEmployee
-        })
-        this.setState({ 
-            employees: filterEmployee
+            [name]: value, 
+            filteredEmployees: filterEmployee
          })
       };
 
     handleClick = event => {
-        event.sort(function(a, b) {
+        event.preventDefault();
+        const sortedEmployees = this.state.filteredEmployees
+        sortedEmployees.sort((a, b) => {
             console.log(event)
             var nameA = a.name.first.toUpperCase(); // ignore upper and lowercase
             var nameB = b.name.first.toUpperCase(); // ignore upper and lowercase
             if (nameA < nameB) {
-              return -1;
+              return this.state.order === "asc" ? -1:1; 
             }
             if (nameA > nameB) {
-              return 1;
+                return this.state.order === "asc" ? 1:-1;;
             }
           
             // names must be equal
             return 0;
            
           });
+          this.setState({ filteredEmployee:sortedEmployees, order: this.state.order === "asc" ? "dec":"asc" })
     }
 
     
@@ -80,7 +86,7 @@ export default class EmployeeList extends Component {
 						</tr>
 				</thead>
                 <tbody>
-                    {this.state.employees.map((employee) => {
+                    {this.state.filteredEmployees.map((employee) => {
                         return <tr key={`${employee.email}`}>
                         <td>{employee.name.first} {employee.name.last}</td>
                         <td><img src={employee.picture.medium}></img></td>
